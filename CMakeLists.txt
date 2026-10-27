@@ -125,6 +125,10 @@ add_library(luasec STATIC
 	${LUASEC_DIR}/luasocket/buffer.c
 	${LUASEC_DIR}/luasocket/io.c
 	${LUASEC_DIR}/luasocket/timeout.c)
+if(WIN32)
+	# statically link openssl on windows so we don't have to lug around the openssl dlls
+	set(OPENSSL_USE_STATIC_LIBS TRUE)
+endif()
 find_package(OpenSSL REQUIRED)
 target_link_libraries(luasec PRIVATE OpenSSL::SSL OpenSSL::Crypto lua luasocket)
 target_compile_definitions(luasec PRIVATE WITH_LUASOCKET LUASOCKET_DEBUG OPENSSL_API_COMPAT=0x10101000L)
