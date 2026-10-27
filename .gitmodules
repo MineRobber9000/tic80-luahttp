@@ -1,0 +1,4 @@
+[submodule "src/luasocket"]
+	path = src/luasocket
+	url = https://github.com/lunarmodules/luasocket
+	shallow = true
