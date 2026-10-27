@@ -4,7 +4,7 @@ import os, subprocess
 
 XXD = subprocess.check_output("which xxd", shell=True).decode("ascii").strip()
 
-MODULES = {
+LUASOCKET_MODULES = {
 	"socket.http": "src/http.lua",
 	"socket.url": "src/url.lua",
 	"socket.tp": "src/tp.lua",
@@ -17,11 +17,17 @@ MODULES = {
 	"mime": "src/mime.lua"
 }
 
+LUASEC_MODULES = {
+	"ssl": "../ssl_patched.lua",
+	"ssl.https": "src/https.lua"
+}
+
 VARIABLE_NAMES = {}
 MODULE_DUMPS = []
 
+# LuaSocket modules
 os.chdir("src/luasocket")
-for module, filename in MODULES.items():
+for module, filename in LUASOCKET_MODULES.items():
 	# socket.http = socket_http
 	# socket = socket_lua
 	variable_name = module.replace(".","_")
@@ -30,6 +36,17 @@ for module, filename in MODULES.items():
 	VARIABLE_NAMES[module] = variable_name
 	output = subprocess.check_output([XXD, "-i", "-n", variable_name, filename]).decode("ascii").rstrip()
 	MODULE_DUMPS.append(output)
+
+# LuaSec modules
+os.chdir("../luasec")
+for module, filename in LUASEC_MODULES.items():
+	variable_name = module.replace(".","_")
+	if "." not in module:
+		variable_name+="_lua"
+	VARIABLE_NAMES[module] = variable_name
+	output = subprocess.check_output([XXD, "-i", "-n", variable_name, filename]).decode("ascii").rstrip()
+	MODULE_DUMPS.append(output)
+
 os.chdir("..") # back to src
 with open("lua_modules.h","w") as f:
 	for module_dump in MODULE_DUMPS:

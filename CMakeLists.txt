@@ -114,6 +114,37 @@ target_include_directories(luasocket PUBLIC
 target_link_libraries(luasocket PUBLIC lua)
 target_compile_options(luasocket PRIVATE "-fPIC")
 
+set(LUASEC_DIR "${CMAKE_SOURCE_DIR}/src/luasec/src")
+add_library(luasec STATIC
+	${LUASEC_DIR}/options.c
+	${LUASEC_DIR}/config.c
+	${LUASEC_DIR}/ec.c
+	${LUASEC_DIR}/x509.c
+	${LUASEC_DIR}/context.c
+	${LUASEC_DIR}/ssl.c
+	${LUASEC_DIR}/luasocket/buffer.c
+	${LUASEC_DIR}/luasocket/io.c
+	${LUASEC_DIR}/luasocket/timeout.c)
+find_package(OpenSSL REQUIRED)
+target_link_libraries(luasec PRIVATE OpenSSL::SSL OpenSSL::Crypto lua luasocket)
+target_compile_definitions(luasec PRIVATE WITH_LUASOCKET LUASOCKET_DEBUG OPENSSL_API_COMPAT=0x10101000L)
+if(LINUX OR APPLE)
+	target_sources(luasocket PRIVATE
+		# add usocket.c
+		${LUASEC_DIR}/luasocket/usocket.c
+	)
+endif()
+if(WIN32)
+	# add wsocket.c to socket.core
+	target_sources(luasec PRIVATE ${LUASEC_DIR}/luasocket/wsocket.c)
+	target_link_libraries(luasec PRIVATE ws2_32)
+	target_compile_definitions(luasec PRIVATE "WIN32" "NDEBUG" "_WINDOWS" "_USRDLL" "LSEC_EXPORTS" "BUFFER_DEBUG" "LSEC_API=__declspec(dllexport)"
+                  "LUASEC_INET_NTOP" "WINVER=0x0501" "_WIN32_WINNT=0x0501" "NTDDI_VERSION=0x05010300")
+endif()
+target_include_directories(luasec PRIVATE
+	${LUASEC_DIR}
+	${LUASEC_DIR}/luasocket)
+
 set(TIC80_DIR "${CMAKE_SOURCE_DIR}/../TIC-80")
 
 add_library(luahttp SHARED
@@ -126,7 +157,7 @@ target_include_directories(luahttp PRIVATE
 	${TIC80_DIR}/src
 	${TIC80_DIR}/src/api
 )
-target_link_libraries(luahttp PRIVATE lua luasocket)
+target_link_libraries(luahttp PRIVATE lua luasocket luasec)
 set_target_properties(luahttp PROPERTIES
 	PREFIX "")
 # If you want textri/OVR stuff:

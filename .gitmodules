@@ -2,3 +2,7 @@
 	path = src/luasocket
 	url = https://github.com/lunarmodules/luasocket
 	shallow = true
+[submodule "src/luasec"]
+	path = src/luasec
+	url = https://github.com/lunarmodules/luasec
+	shallow = true

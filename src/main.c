@@ -55,6 +55,10 @@ extern int luaopen_mime_core(lua_State *L);
 extern int luaopen_socket_unix(lua_State *L);
 extern int luaopen_socket_serial(lua_State *L);
 #endif
+extern int luaopen_ssl_core(lua_State *L);
+extern int luaopen_ssl_config(lua_State *L);
+extern int luaopen_ssl_context(lua_State *L);
+extern int luaopen_ssl_x509(lua_State *L);
 
 static bool initLua(tic_mem* tic, const char* code)
 {
@@ -72,6 +76,10 @@ static bool initLua(tic_mem* tic, const char* code)
     preload_c(lua, "socket.unix", luaopen_socket_unix);
     preload_c(lua, "socket.serial", luaopen_socket_serial);
 #endif
+    preload_c(lua, "ssl.core", luaopen_ssl_core);
+    preload_c(lua, "ssl.config", luaopen_ssl_config);
+    preload_c(lua, "ssl.context", luaopen_ssl_context);
+    preload_c(lua, "ssl.x509", luaopen_ssl_x509);
 
     // Lua libraries
     if (!PRELOAD_ALL_MODULES) {
