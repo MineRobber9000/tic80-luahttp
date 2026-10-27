@@ -106,6 +106,7 @@ endif()
 if(WIN32)
 	# add wsocket.c to socket.core
 	target_sources(luasocket PRIVATE ${LUASOCKET_DIR}/wsocket.c)
+	target_link_libraries(luasocket PRIVATE ws2_32)
 	target_compile_definitions(luasocket PRIVATE NDEBUG)
 endif()
 target_include_directories(luasocket PUBLIC
