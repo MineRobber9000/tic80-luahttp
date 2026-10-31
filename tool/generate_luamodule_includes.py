@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 """Generate the includes for LuaSocket pure-Lua modules."""
-import os, subprocess
+import os, util
 
-XXD = subprocess.check_output("which xxd", shell=True).decode("ascii").strip()
+XXD = util.which("xxd")
 
 LUASOCKET_MODULES = {
 	"socket.http": "src/http.lua",
@@ -22,6 +22,10 @@ LUASEC_MODULES = {
 	"ssl.https": "src/https.lua"
 }
 
+INTERNAL_MODULES = {
+	"tichttp": "tichttp.lua"
+}
+
 VARIABLE_NAMES = {}
 MODULE_DUMPS = []
 
@@ -34,7 +38,7 @@ for module, filename in LUASOCKET_MODULES.items():
 	if "." not in module:
 		variable_name+="_lua"
 	VARIABLE_NAMES[module] = variable_name
-	output = subprocess.check_output([XXD, "-i", "-n", variable_name, filename]).decode("ascii").rstrip()
+	output = util.call([XXD, "-i", "-n", variable_name, filename]).rstrip()
 	MODULE_DUMPS.append(output)
 
 # LuaSec modules
@@ -44,10 +48,19 @@ for module, filename in LUASEC_MODULES.items():
 	if "." not in module:
 		variable_name+="_lua"
 	VARIABLE_NAMES[module] = variable_name
-	output = subprocess.check_output([XXD, "-i", "-n", variable_name, filename]).decode("ascii").rstrip()
+	output = util.call([XXD, "-i", "-n", variable_name, filename]).rstrip()
 	MODULE_DUMPS.append(output)
 
-os.chdir("..") # back to src
+# Internal modules
+os.chdir("..")
+for module, filename in INTERNAL_MODULES.items():
+	variable_name = module.replace(".","_")
+	if "." not in module:
+		variable_name+="_lua"
+	VARIABLE_NAMES[module] = variable_name
+	output = util.call([XXD, "-i", "-n", variable_name, filename]).rstrip()
+	MODULE_DUMPS.append(output)
+
 with open("lua_modules.h","w") as f:
 	for module_dump in MODULE_DUMPS:
 		f.write(module_dump)

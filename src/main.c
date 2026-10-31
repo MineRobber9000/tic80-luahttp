@@ -29,6 +29,12 @@
 #include <lualib.h>
 #include <ctype.h>
 
+#include "ca_bundle.h"
+int luaopen_tichttp_cabundle(lua_State *L) {
+	lua_pushlstring(L, ca_bundle, ca_bundle_len);
+	return 1;
+}
+
 static void preload_c(lua_State *L, const char* name, lua_CFunction function) {
     luaL_getsubtable(L, LUA_REGISTRYINDEX, LUA_PRELOAD_TABLE);
     lua_pushcfunction(L, function);
@@ -70,16 +76,20 @@ static bool initLua(tic_mem* tic, const char* code)
     luaapi_open(lua);
 
     // C libraries
+    // LuaSocket
     preload_c(lua, "socket.core", luaopen_socket_core);
     preload_c(lua, "mime.core", luaopen_mime_core);
 #ifdef LUASOCKET_IS_UNIX
     preload_c(lua, "socket.unix", luaopen_socket_unix);
     preload_c(lua, "socket.serial", luaopen_socket_serial);
 #endif
+    // LuaSec
     preload_c(lua, "ssl.core", luaopen_ssl_core);
     preload_c(lua, "ssl.config", luaopen_ssl_config);
     preload_c(lua, "ssl.context", luaopen_ssl_context);
     preload_c(lua, "ssl.x509", luaopen_ssl_x509);
+    // Our own
+    preload_c(lua, "tichttp.cabundle", luaopen_tichttp_cabundle);
 
     // Lua libraries
     if (!PRELOAD_ALL_MODULES) {

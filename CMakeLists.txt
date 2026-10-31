@@ -133,7 +133,7 @@ find_package(OpenSSL REQUIRED)
 target_link_libraries(luasec PRIVATE OpenSSL::SSL OpenSSL::Crypto lua luasocket)
 target_compile_definitions(luasec PRIVATE WITH_LUASOCKET LUASOCKET_DEBUG OPENSSL_API_COMPAT=0x10101000L)
 if(LINUX OR APPLE)
-	target_sources(luasocket PRIVATE
+	target_sources(luasec PRIVATE
 		# add usocket.c
 		${LUASEC_DIR}/luasocket/usocket.c
 	)
