@@ -63,74 +63,6 @@ local function wireformat2array(str)
    return array
 end
 
---------------------------------------------------------------------------------
--- System CA auto-detection
---
-
--- Module-level cache; nil means "not (yet) populated", false means don't auto detect (always return nil)
-local system_ca = false
-
---
--- Probes for a usable system CA value. Does not touch the cache.
---
-local find_system_ca do
-
-   -- Known CA bundle locations to probe, in order.
-   local ca_bundle_paths = {
-      "/etc/ssl/certs/ca-certificates.crt",                 -- Debian / Ubuntu / Gentoo
-      "/etc/pki/tls/certs/ca-bundle.crt",                   -- Fedora / RHEL 6
-      "/etc/ssl/ca-bundle.pem",                             -- OpenSUSE
-      "/etc/pki/tls/cacert.pem",                            -- OpenELEC
-      "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",  -- CentOS / RHEL 7
-      "/etc/ssl/cert.pem",                                  -- OpenBSD / Alpine / macOS
-   }
-
-   function find_system_ca()
-      for _, path in ipairs(ca_bundle_paths) do
-         local fh = io.open(path, "r")
-         if fh then
-            fh:close()
-            return path
-         end
-      end
-      return nil, "no system CA bundle found:\n\tno file '" .. table.concat(ca_bundle_paths, "'\n\tno file '") .. "'"
-   end
-end
-
-
---
--- Explicitly sets the cached system CA value.
---   * a string caches that value
---   * nil clears the cache, so the next get_system_ca() call re-probes the file list
---   * false disables discovery, so get_system_ca() always returns nil + error
---
-local function set_system_ca(ca)
-   assert(ca == nil or ca == false or type(ca) == "string", "invalid system CA value; nil, false, filename")
-   system_ca = ca
-   return true
-end
-
---
--- Returns the cached system CA value, auto-populating the cache on first call, or nil+error
--- if discovery fails or is disabled.
---
-local function get_system_ca()
-   if system_ca == false then
-      return nil, "system CA discovery disabled"
-   end
-   if system_ca == nil then
-      local cafile, err = find_system_ca()
-      if not cafile then
-         return nil, err
-      end
-      set_system_ca(cafile)
-   end
-   return system_ca
-end
-
---
---
---
 local function newcontext(cfg)
    local succ, msg, ctx
    if cfg.host then
@@ -174,6 +106,10 @@ local function newcontext(cfg)
    -- Load the CA certificates
    if cfg.cafile or cfg.capath then
       succ, msg = context.locations(ctx, cfg.cafile, cfg.capath)
+      if not succ then return nil, msg end
+   end
+   if cfg.cadata then
+      succ, msg = context.cadata(ctx, cfg.cadata)
       if not succ then return nil, msg end
    end
    -- Set SSL ciphers
@@ -391,12 +327,6 @@ local _M = {
   loadcertificate = x509.load,
   newcontext      = newcontext,
   wrap            = wrap,
-  find_system_ca  = find_system_ca,
-  set_system_ca   = set_system_ca,
-  get_system_ca   = get_system_ca,
 }
-
--- Warm the system CA cache at load time, rather than on first connection.
-get_system_ca()
 
 return _M
