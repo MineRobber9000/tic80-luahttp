@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Generate the includes for LuaSocket pure-Lua modules."""
-import os, util
+import util
+util.ensure_project_root()
 
 XXD = util.which("xxd")
 
@@ -30,38 +31,38 @@ VARIABLE_NAMES = {}
 MODULE_DUMPS = []
 
 # LuaSocket modules
-os.chdir("src/luasocket")
-for module, filename in LUASOCKET_MODULES.items():
-	# socket.http = socket_http
-	# socket = socket_lua
-	variable_name = module.replace(".","_")
-	if "." not in module:
-		variable_name+="_lua"
-	VARIABLE_NAMES[module] = variable_name
-	output = util.call([XXD, "-i", "-n", variable_name, filename]).rstrip()
-	MODULE_DUMPS.append(output)
+with util.chdir("src/luasocket"):
+	for module, filename in LUASOCKET_MODULES.items():
+		# socket.http = socket_http
+		# socket = socket_lua
+		variable_name = module.replace(".","_")
+		if "." not in module:
+			variable_name+="_lua"
+		VARIABLE_NAMES[module] = variable_name
+		output = util.call([XXD, "-i", "-n", variable_name, filename]).rstrip()
+		MODULE_DUMPS.append(output)
 
 # LuaSec modules
-os.chdir("../luasec")
-for module, filename in LUASEC_MODULES.items():
-	variable_name = module.replace(".","_")
-	if "." not in module:
-		variable_name+="_lua"
-	VARIABLE_NAMES[module] = variable_name
-	output = util.call([XXD, "-i", "-n", variable_name, filename]).rstrip()
-	MODULE_DUMPS.append(output)
+with util.chdir("src/luasec"):
+	for module, filename in LUASEC_MODULES.items():
+		variable_name = module.replace(".","_")
+		if "." not in module:
+			variable_name+="_lua"
+		VARIABLE_NAMES[module] = variable_name
+		output = util.call([XXD, "-i", "-n", variable_name, filename]).rstrip()
+		MODULE_DUMPS.append(output)
 
 # Internal modules
-os.chdir("..")
-for module, filename in INTERNAL_MODULES.items():
-	variable_name = module.replace(".","_")
-	if "." not in module:
-		variable_name+="_lua"
-	VARIABLE_NAMES[module] = variable_name
-	output = util.call([XXD, "-i", "-n", variable_name, filename]).rstrip()
-	MODULE_DUMPS.append(output)
+with util.chdir("src"):
+	for module, filename in INTERNAL_MODULES.items():
+		variable_name = module.replace(".","_")
+		if "." not in module:
+			variable_name+="_lua"
+		VARIABLE_NAMES[module] = variable_name
+		output = util.call([XXD, "-i", "-n", variable_name, filename]).rstrip()
+		MODULE_DUMPS.append(output)
 
-with open("lua_modules.h","w") as f:
+with open("src/lua_modules.h","w") as f:
 	for module_dump in MODULE_DUMPS:
 		f.write(module_dump)
 		f.write("\n\n")

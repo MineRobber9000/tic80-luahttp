@@ -18,6 +18,7 @@ So this script does the patching automagically, and I can remember to run this
 script whenever I run into odd situations."""
 import util
 import sys
+util.ensure_project_root()
 
 with open("src/luasec/src/ssl.lua","r") as f:
 	ssl_lua = f.read().splitlines()
